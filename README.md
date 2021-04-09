@@ -2,39 +2,79 @@
 
 [![Hypergiant](https://i.imgur.com/cLjriJj.jpg)](https://www.hypergiant.com/)
 
-This repository represents the basic skeleton of a Terraform module at Hypergiant.
-
-### What's in the box?
-- Github Actions
-- File structure for your module
-- Unit tests
-- File structure for examples (that will be unit tested)
-
-### What do I do?
-- Change this section
-- Write your module
-- Keep your example in `examples/complete` up to date
-- Add your AWS IAM creds to the repo's secrets so unit tests can run. Use TF Unit Test User in LastPass.
-- Once your base functionality is done and it passes tests, deploy it in Terraform Cloud
-- Update your input and output interfaces using `terraform-docs markdown .` on changes to variables
-
 ## How do you use this Module?
 
-### Requirements
+This module provisions Flux2 onto an EKS cluster and emits the public key to add to Github as an output.
 
-No requirements.
+### Example
 
-### Providers
+```HCL
+// always initialize providers OUTSIDE the module or else you're gonna have a bad time
+data "aws_eks_cluster" "demo" {
+  name = module.demo_eks.cluster_id
+}
 
-No provider.
+data "aws_eks_cluster_auth" "demo" {
+  name = module.demo_eks.cluster_id
+}
 
-### Inputs
+provider "kubectl" {
+  alias                  = "flux2-kubectl"
+  host                   = data.aws_eks_cluster.demo.endpoint
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.demo.certificate_authority.0.data)
+  token                  = data.aws_eks_cluster_auth.demo.token
+}
 
-No input.
+provider "kubernetes" {
+  alias                  = "flux2-kubernetes"
+  host                   = data.aws_eks_cluster.demo.endpoint
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.demo.certificate_authority.0.data)
+  token                  = data.aws_eks_cluster_auth.demo.token
+}
 
-### Outputs
+provider "tls" {
+  alias = "flux2-tls"
+}
 
-No output.
+provider "flux" {
+  alias = "flux2-flux"
+}
+
+
+module "demo_eks" {
+  // deploy your EKS cluster as usual
+  source    = "terraform-aws-modules/eks/aws"
+
+  // make sure to explicitly use the same provider to allow for multiple clusters in the same state
+  providers = {
+    kubernetes = kubernetes.flux2-kubernetes
+  }
+}
+
+module "flux2-bootstrap" {
+  source  = "app.terraform.io/Hypergiant/flux2-bootstrap/kubernetes"
+  version = "~> 0.1.0"
+
+  // Pass providers in explicitly to allow for multiple clusters
+  providers = {
+    kubernetes = kubernetes.flux2-kubernetes
+    kubectl    = kubectl.flux2-kubectl
+    flux       = flux.flux2-flux
+    tls        = tls.flux2-tls
+  }
+
+  // Required inputs
+  cluster_name = "demo"
+  flux_git_url = "ssh://git@github.com/gohypergiant/flux-demo.git"
+
+  // Optional Inputs
+  flux_git_path        = "common//,demo"
+  flux_git_email       = "demo@hypergiant.com"
+  flux_git_branch      = "main"
+  flux_ssh_known_hosts = "your.private.git.server.io ssh-rsa AAAAB...."
+  flux_sync_interval   = "5m"
+}
+```
 
 ## What's a Module?
 
