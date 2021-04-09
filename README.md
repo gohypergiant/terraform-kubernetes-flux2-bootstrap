@@ -8,16 +8,66 @@ This module provisions Flux2 onto an EKS cluster and emits the public key to add
 
 ### Example
 
-```
+```HCL
+// always initialize providers OUTSIDE the module or else you're gonna have a bad time
+data "aws_eks_cluster" "demo" {
+  name = module.demo_eks.cluster_id
+}
+
+data "aws_eks_cluster_auth" "demo" {
+  name = module.demo_eks.cluster_id
+}
+
+provider "kubectl" {
+  alias                  = "flux2-kubectl"
+  host                   = data.aws_eks_cluster.demo.endpoint
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.demo.certificate_authority.0.data)
+  token                  = data.aws_eks_cluster_auth.demo.token
+}
+
+provider "kubernetes" {
+  alias                  = "flux2-kubernetes"
+  host                   = data.aws_eks_cluster.demo.endpoint
+  cluster_ca_certificate = base64decode(data.aws_eks_cluster.demo.certificate_authority.0.data)
+  token                  = data.aws_eks_cluster_auth.demo.token
+}
+
+provider "tls" {
+  alias = "flux2-tls"
+}
+
+provider "flux" {
+  alias = "flux2-flux"
+}
+
+
+module "demo_eks" {
+  // deploy your EKS cluster as usual
+  source    = "terraform-aws-modules/eks/aws"
+
+  // make sure to explicitly use the same provider to allow for multiple clusters in the same state
+  providers = {
+    kubernetes = kubernetes.flux2-kubernetes
+  }
+}
+
 module "flux2-bootstrap" {
   source  = "app.terraform.io/Hypergiant/flux2-bootstrap/kubernetes"
   version = "~> 0.1.0"
-  
-  # Required inputs
+
+  // Pass providers in explicitly to allow for multiple clusters
+  providers = {
+    kubernetes = kubernetes.flux2-kubernetes
+    kubectl    = kubectl.flux2-kubectl
+    flux       = flux.flux2-flux
+    tls        = tls.flux2-tls
+  }
+
+  // Required inputs
   cluster_name = "demo"
   flux_git_url = "ssh://git@github.com/gohypergiant/flux-demo.git"
 
-  # Optional Inputs
+  // Optional Inputs
   flux_git_path        = "common//,demo"
   flux_git_email       = "demo@hypergiant.com"
   flux_git_branch      = "main"
