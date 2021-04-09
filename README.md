@@ -2,39 +2,29 @@
 
 [![Hypergiant](https://i.imgur.com/cLjriJj.jpg)](https://www.hypergiant.com/)
 
-This repository represents the basic skeleton of a Terraform module at Hypergiant.
-
-### What's in the box?
-- Github Actions
-- File structure for your module
-- Unit tests
-- File structure for examples (that will be unit tested)
-
-### What do I do?
-- Change this section
-- Write your module
-- Keep your example in `examples/complete` up to date
-- Add your AWS IAM creds to the repo's secrets so unit tests can run. Use TF Unit Test User in LastPass.
-- Once your base functionality is done and it passes tests, deploy it in Terraform Cloud
-- Update your input and output interfaces using `terraform-docs markdown .` on changes to variables
-
 ## How do you use this Module?
 
-### Requirements
+This module provisions Flux2 onto an EKS cluster and emits the public key to add to Github as an output.
 
-No requirements.
+### Example
 
-### Providers
+```
+module "flux2-bootstrap" {
+  source  = "app.terraform.io/Hypergiant/flux2-bootstrap/kubernetes"
+  version = "~> 0.1.0"
+  
+  # Required inputs
+  cluster_name = "demo"
+  flux_git_url = "ssh://git@github.com/gohypergiant/flux-demo.git"
 
-No provider.
-
-### Inputs
-
-No input.
-
-### Outputs
-
-No output.
+  # Optional Inputs
+  flux_git_path        = "common//,demo"
+  flux_git_email       = "demo@hypergiant.com"
+  flux_git_branch      = "main"
+  flux_ssh_known_hosts = "your.private.git.server.io ssh-rsa AAAAB...."
+  flux_sync_interval   = "5m"
+}
+```
 
 ## What's a Module?
 
