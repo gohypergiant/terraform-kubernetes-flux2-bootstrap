@@ -1,6 +1,7 @@
 # Generate manifests
 data "flux_install" "main" {
   target_path = var.flux_git_path
+  components_extra = var.flux_deploy_image_automation ? ["image-automation-controller", "image-reflector-controller"] : []
 }
 
 data "flux_sync" "main" {

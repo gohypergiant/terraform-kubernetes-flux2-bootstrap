@@ -73,6 +73,7 @@ module "flux2-bootstrap" {
   flux_git_branch      = "main"
   flux_ssh_known_hosts = "your.private.git.server.io ssh-rsa AAAAB...."
   flux_sync_interval   = "5m"
+  flux_deploy_image_automation = true
 }
 ```
 
