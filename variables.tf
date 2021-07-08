@@ -59,3 +59,9 @@ variable "flux_sops_kms_additional_principals_ro" {
   type        = set(string)
   description = "Optional: Users to grant readonly access to the KMS store"
 }
+
+variable "flux_deploy_image_automation" {
+  type        = bool
+  default     = false
+  description = "Optionally deploy the image automation controller with the gitops toolkit"
+}
