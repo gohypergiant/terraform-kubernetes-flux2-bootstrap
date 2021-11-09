@@ -57,6 +57,27 @@ resource "kubectl_manifest" "install" {
   yaml_body  = each.value
 }
 
+// Note: Workaround unless support for adding the IRSA ARN is added to the flux2 provider: https://github.com/fluxcd/terraform-provider-flux/issues/120. We are removing the kustomize SA from the collection of 
+resource "kubectl_manifest" "apply" {
+  for_each   = { for v in data.kustomization_overlay.example.manifests : lower(join("/", compact([v.data.apiVersion, v.data.kind, lookup(v.data.metadata, "namespace", ""), v.data.metadata.name]))) => v.content if anytrue([v.data.kind != "ServiceAccount", v.data.metadata.name != "kustomize-controller"]) }
+  depends_on = [kubernetes_namespace.flux_system]
+  yaml_body  = each.value
+}
+
+resource "kubernetes_service_account" "kustomize_controller" {
+  metadata {
+    name      = "kustomize-controller"
+    namespace = "flux-system"
+    labels = {
+      "app.kubernetes.io/instance" = "flux-system"
+      "app.kubernetes.io/part-of"  = "flux"
+      "app.kubernetes.io/version"  = data.install.main.version
+    }
+    annotations = {
+      "eks.amazonaws.com/role-arn" = var.flux_sops_kms_create ? aws_kms_key.this.arn : ""
+    }
+  }
+}
 
 // The group of manifests to initialize the flux state repo
 resource "kubectl_manifest" "sync" {

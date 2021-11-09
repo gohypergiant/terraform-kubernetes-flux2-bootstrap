@@ -38,6 +38,28 @@ variable "flux_ssh_known_hosts" {
   description = "SSH known hosts used to access private helm repos via git SSH. See https://github.com/fluxcd/helm-operator/blob/master/chart/helm-operator/README.md#use-a-private-git-server"
 }
 
+variable "flux_sops_kms_create" {
+  type        = bool
+  default     = false
+  description = "Optional: Deploy KMS resource which will act as the key store for SOP encrypted secrets. See: (https://toolkit.fluxcd.io/guides/mozilla-sops/)"
+}
+
+variable "flux_sops_kms_name" {
+  type        = string
+  default     = "flux2"
+  description = "Optional: The name of the KMS store"
+}
+
+variable "flux_sops_kms_additional_principals_rw" {
+  type        = set(string)
+  description = "Optional: Users to grant management access to the KMS store"
+}
+
+variable "flux_sops_kms_additional_principals_ro" {
+  type        = set(string)
+  description = "Optional: Users to grant readonly access to the KMS store"
+}
+
 variable "flux_deploy_image_automation" {
   type        = bool
   default     = false
