@@ -1,6 +1,6 @@
 # Generate manifests
 data "flux_install" "main" {
-  target_path = var.flux_git_path
+  target_path      = var.flux_git_path
   components_extra = var.flux_deploy_image_automation ? ["image-automation-controller", "image-reflector-controller"] : []
 }
 
@@ -11,8 +11,9 @@ data "flux_sync" "main" {
 }
 
 resource "tls_private_key" "main" {
-  algorithm = "RSA"
-  rsa_bits  = 4096
+  algorithm   = var.private_key_algorithm
+  rsa_bits    = var.private_key_algorithm == "RSA" ? var.private_key_rsa_bits : null
+  ecdsa_curve = var.private_key_algorithm == "ECDSA" ? var.private_key_ecdsa_curve : null
 }
 
 resource "kubernetes_namespace" "flux_system" {
@@ -27,7 +28,6 @@ resource "kubernetes_namespace" "flux_system" {
   }
 }
 
-// 
 data "kubectl_file_documents" "install" {
   content = data.flux_install.main.content
 }
@@ -66,7 +66,7 @@ resource "kubectl_manifest" "sync" {
 }
 
 
-// Manage the secret used by flux to 
+// Manage the secret used by flux
 resource "kubernetes_secret" "main" {
   depends_on = [kubectl_manifest.install]
 
