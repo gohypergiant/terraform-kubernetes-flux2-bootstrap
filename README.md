@@ -68,15 +68,17 @@ module "flux2-bootstrap" {
   flux_git_url = "ssh://git@github.com/gohypergiant/flux-demo.git"
 
   // Optional Inputs
-  flux_git_path            = "common//,demo"
-  flux_git_email           = "demo@hypergiant.com"
-  flux_git_branch          = "main"
-  flux_ssh_known_hosts     = "your.private.git.server.io ssh-rsa AAAAB...."
-  flux_sync_interval       = "5m"
-  flux_deploy_image_auto   mation = true
-  private_key_algorithm    = "rsa"
-  private_key_rsa_bits     = 2048
-  private_key_ecdsa_curve  = "P224"
+  flux_git_path                = "common//,demo"
+  flux_git_email               = "demo@hypergiant.com"
+  flux_git_branch              = "main"
+  flux_ssh_known_hosts         = "your.private.git.server.io ssh-rsa AAAAB...."
+  flux_sync_interval           = "5m"
+  flux_deploy_image_automation = true
+
+  // You probably want to prefer ECDSA: https://github.blog/2022-09-01-improving-git-protocol-security-github/
+  private_key_algorithm        = "ECDSA"
+  private_key_rsa_bits         = 2048
+  private_key_ecdsa_curve      = "P224"
 }
 ```
 
