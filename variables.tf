@@ -38,6 +38,24 @@ variable "flux_ssh_known_hosts" {
   description = "SSH known hosts used to access private helm repos via git SSH. See https://github.com/fluxcd/helm-operator/blob/master/chart/helm-operator/README.md#use-a-private-git-server"
 }
 
+variable "private_key_algorithm" {
+  type        = string
+  default     = "RSA"
+  description = "The name of the algorithm to use for the key"
+}
+
+variable "private_key_rsa_bits" {
+  type        = number
+  default     = 2048
+  description = "When algorithm is \"RSA\", the size of the generated RSA key in bits."
+}
+
+variable "private_key_ecdsa_curve" {
+  type        = string
+  default     = "P224"
+  description = "When algorithm is \"ECDSA\", the name of the elliptic curve to use"
+}
+
 variable "flux_deploy_image_automation" {
   type        = bool
   default     = false
